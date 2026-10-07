@@ -12,10 +12,10 @@ connect();
 export async function POST(req) {
 
     try {
-        const apiKey = req.headers.get("x-api-key");
-        if (apiKey !== process.env.HONEYPOT_API_KEY) {
-            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-        }
+        // const apiKey = req.headers.get("x-api-key");
+        // if (apiKey !== process.env.HONEYPOT_API_KEY) {
+        //     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        // }
 
         //reading input
         const {
@@ -41,7 +41,7 @@ export async function POST(req) {
             text: message.text,
             timestamp: new Date(message.timestamp),
         });
-             session.totalMessagesExchanged =(session.totalMessagesExchanged || 0) + 1;
+        session.totalMessagesExchanged = (session.totalMessagesExchanged || 0) + 1;
 
         //check weather scam or not...
         if (ScamCheck(message.text)) {
@@ -94,7 +94,7 @@ Keep replies short and realistic.
                 timestamp: new Date(),
             });
 
-            session.totalMessagesExchanged =(session.totalMessagesExchanged || 0) + 1;
+            session.totalMessagesExchanged = (session.totalMessagesExchanged || 0) + 1;
         }
 
         //Intelligence extraction

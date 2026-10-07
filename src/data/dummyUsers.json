@@ -1,0 +1,25 @@
+
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "rahul_test",
+      "password": "DemoPass123!"
+    },
+    {
+      "id": 2,
+      "username": "priya_lab",
+      "password": "Sample#456"
+    },
+    {
+      "id": 3,
+      "username": "admin_demo",
+      "password": "LabOnly789!"
+    },
+    {
+      "id": 4,
+      "username": "kartik_synthetic",
+      "password": "FakeCredential123!"
+    }
+  ]
+}
