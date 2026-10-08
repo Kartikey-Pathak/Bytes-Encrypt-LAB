@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-const MODEL = "google/gemma-4-31b-it:free";
+const MODEL = "openai/gpt-oss-120b";
 
 const MAX_HISTORY_MESSAGES = 20;
 const ESCALATION_THRESHOLD = 4;
@@ -372,11 +372,11 @@ function validateLabSql(sql) {
 
 /*
 --------------------------------------------------
-OPENROUTER
+GROQ
 --------------------------------------------------
 */
 
-async function callOpenRouter(messages) {
+async function callGroq(messages) {
   const controller =
     new AbortController();
 
@@ -387,23 +387,16 @@ async function callOpenRouter(messages) {
 
   try {
     const response = await fetch(
-      "https://openrouter.ai/api/v1/chat/completions",
+      "https://api.groq.com/openai/v1/chat/completions",
       {
         method: "POST",
 
         headers: {
           Authorization:
-            `Bearer ${process.env.LLAMA_API_KEY}`,
+            `Bearer ${process.env.GROQ}`,
 
           "Content-Type":
             "application/json",
-
-          "HTTP-Referer":
-            process.env.NEXT_PUBLIC_SITE_URL ||
-            "http://localhost:3000",
-
-          "X-Title":
-            "ShopBot AI Security Lab",
         },
 
         body: JSON.stringify({
@@ -411,11 +404,6 @@ async function callOpenRouter(messages) {
 
           messages,
 
-          /*
-           * Keep this simple.
-           * No Nemotron-specific reasoning
-           * configuration.
-           */
           max_tokens: 800,
 
           temperature: 0.2,
@@ -441,7 +429,7 @@ async function callOpenRouter(messages) {
     }
 
     console.log(
-      "[OPENROUTER RAW RESPONSE]",
+      "[GROQ RAW RESPONSE]",
       JSON.stringify(
         data,
         null,
@@ -451,7 +439,7 @@ async function callOpenRouter(messages) {
 
     if (!response.ok) {
       console.error(
-        "[OPENROUTER ERROR]",
+        "[GROQ ERROR]",
         {
           status: response.status,
           data,
@@ -466,12 +454,12 @@ async function callOpenRouter(messages) {
     }
 
     /*
-     * OpenRouter/provider error returned
+     * Groq/provider error returned
      * inside the response body.
      */
     if (data?.error) {
       console.error(
-        "[OPENROUTER PROVIDER ERROR]",
+        "[GROQ PROVIDER ERROR]",
         data.error
       );
 
@@ -491,7 +479,7 @@ async function callOpenRouter(messages) {
     };
   } catch (error) {
     console.error(
-      "[OPENROUTER FETCH ERROR]",
+      "[GROQ FETCH ERROR]",
       error
     );
 
@@ -679,7 +667,7 @@ export async function POST(req) {
     */
 
     let result =
-      await callOpenRouter(
+      await callGroq(
         messages
       );
 
@@ -696,7 +684,7 @@ export async function POST(req) {
       const providerMessage =
         providerError?.message ||
         providerError ||
-        "OpenRouter request failed.";
+        "Groq request failed.";
 
       const providerCode =
         Number(
@@ -729,7 +717,7 @@ export async function POST(req) {
         );
 
         result =
-          await callOpenRouter(
+          await callGroq(
             messages
           );
       }
@@ -748,7 +736,7 @@ export async function POST(req) {
       const providerMessage =
         providerError?.message ||
         providerError ||
-        "OpenRouter request failed.";
+        "Groq request failed.";
 
       return NextResponse.json(
         {
@@ -854,7 +842,7 @@ export async function POST(req) {
       );
 
       result =
-        await callOpenRouter(
+        await callGroq(
           retryMessages
         );
 
@@ -1128,3 +1116,14 @@ export async function POST(req) {
     );
   }
 }
+
+
+// Threshold Working — Short
+// - ESCALATION_THRESHOLD = 4
+// - Backend detects sensitive/suspicious requests in the conversation.
+// - Each detected attempt increases sensitiveAttempts.
+// - When 4 attempts are reached, the lab switches to Escalated Mode.
+// - In Escalated Mode, the AI can generate read-only SQL for the synthetic database.
+// - SQL is never actually executed — it's only generated for security research/demo.
+// Flow:
+// Sensitive attempts → Count → 4 reached → Escalate → Generate SQL → Validate → Return (no execution)
